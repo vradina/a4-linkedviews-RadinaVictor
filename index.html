@@ -3,18 +3,127 @@
 <head>
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/topojson@3"></script>
+  <link rel="stylesheet" href="main.css">
+  
 </head>
 <body>
+  <h1>US Temperature</h1>
   <svg id="map"></svg>
   <svg id="linechart"></svg>
   <script>
+   
+    async function init(){
 
-    const us = await d3.json("https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json");
+      const width = 960
+      const height = 600
 
-    const projection = d3.geoAlbersUsa()
-    const path = d3.geoPath().projection(projection)
+      const lcWidth = 600
+      const lcHeight = 300
+      const margin = {top: 20, right: 30, bottom: 40, left:50}
 
-    
+      const svg = d3.select("#map")
+      .attr("width", width)
+      .attr("height", height)
+
+      const lcSvg = d3.select("#linechart")
+      .attr("width", lcWidth)
+      .attr("height", lcHeight)
+
+
+      
+
+      const us = await d3.json("https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json");
+
+      console.log("first state id:", topojson.feature(us, us.objects.states).features[0].id)
+
+      const projection = d3.geoAlbersUsa()
+      .scale(1300)
+      .translate([width / 2, height / 2])
+
+      const path = d3.geoPath().projection(projection)
+
+      const data = await d3.csv("climdiv_state_year.csv", d =>({
+        fips: +d.fips, 
+        year: +d.year, 
+        temp: +d.temp
+      }))
+
+      const xScale = d3.scaleLinear()
+      .domain(d3.extent(data, d => d.year))
+      .range([margin.left, lcWidth - margin.right])
+
+      const yScale = d3.scaleLinear()
+      .domain(d3.extent(data, d => d.temp))
+      .range([lcHeight - margin.bottom, margin.top])
+
+      const dataByState = d3.group(data, d=> d.fips)
+
+      const line = d3.line()
+        .x(d => xScale(d.year))
+        .y(d => yScale(d.temp))
+
+      const avgByState = d3.rollup(
+        data, 
+        v => d3.mean(v, d => d.temp), 
+        d => d.fips
+      )
+
+      console.log("first row of data:", data[0])
+      console.log("avgByState: ", avgByState)
+
+      const colorScale = d3.scaleSequential()
+      .interpolator(d3.interpolateRdYlBu)
+      .domain(d3.extent([...avgByState.values()]).reverse())
+
+      svg.selectAll("path")
+        .data(topojson.feature(us, us.objects.states).features)
+        .join("path")
+        .attr("d", path)
+        .attr("stroke", "#fff")
+        .attr("stroke-width", 1)
+        .attr("fill", d => {
+          const val = avgByState.get(+d.id)
+          return val ? colorScale(val) : "#ccc"
+      })
+
+      lcSvg.selectAll("path.stateline")
+        .data(dataByState)
+        .join("path")
+        .attr("class", "stateline")
+        .attr("fill", "none")
+        .attr("stroke", "#ccc")
+        .attr("stroke-width", 1)
+        .attr("d", ([fips, values]) => line(values))
+
+        lcSvg.append("g")
+          .attr("transform", `translate(0, ${lcHeight - margin.bottom})`)
+          .call(d3.axisBottom(xScale).tickFormat(d3.format("d")))
+
+        lcSvg.append("g")
+          .attr("transform", `translate(${margin.left}, 0)`)
+          .call(d3.axisLeft(yScale))
+
+
+        svg.selectAll("path")
+          .style("cursor", "pointer")
+          .on("click", function(event, d){
+            const clickedFips = +d.id
+
+            svg.selectAll("path")
+              .attr("opacity", s => +s.id === clickedFips ? 1 : 0.4)
+
+            lcSvg.selectAll("path.stateline")
+              .attr("stroke", ([fips]) => fips === clickedFips ? "steelblue": "#ccc")
+              .attr("stroke-width", ([fips]) => fips === clickedFips ? 3 : 1)
+              .attr("opacity", ([fips]) => fips === clickedFips ? 1 : 0.3)
+          })
+
+    }
+
+  init()
+
+   
   </script>
+
 </body>
 </html>
