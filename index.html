@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/topojson@3"></script>
+</head>
+<body>
+  <svg id="map"></svg>
+  <svg id="linechart"></svg>
+  <script>
+
+    const us = await d3.json("https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json");
+
+    const projection = d3.geoAlbersUsa()
+    const path = d3.geoPath().projection(projection)
+
+    
+  </script>
+</body>
+</html>

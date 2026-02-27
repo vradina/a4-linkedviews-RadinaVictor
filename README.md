@@ -54,3 +54,7 @@ Extra Links
 - https://github.com/d3/d3-brush
 - https://observablehq.com/collection/@d3/d3-brush
 - https://observablehq.com/@d3/focus-context?collection=@d3/d3-brush
+
+
+
+the user will see a map and a line graph with a bunch of gray lines (one for each state), it the user clicks on a state on the map then the line that corresponds to that state will be highlighted
