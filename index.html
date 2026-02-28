@@ -17,8 +17,8 @@
       const width = 960
       const height = 600
 
-      const lcWidth = 600
-      const lcHeight = 300
+      const lcWidth = 800
+      const lcHeight = 500
       const margin = {top: 20, right: 30, bottom: 40, left:50}
 
       const svg = d3.select("#map")
@@ -118,6 +118,19 @@
               .attr("opacity", ([fips]) => fips === clickedFips ? 1 : 0.3)
           })
 
+        lcSvg.selectAll("path")
+          .style("cursor", "pointer")
+          .on("click", function(event, [fips, values]){
+          
+            svg.selectAll("path")
+              .attr("opacity", s => + s.id === fips ? 1 : 0.4)
+
+            lcSvg.selectAll("path.stateline")
+              .attr("stroke", ([f]) => f === fips ? "black" : "#ccc")
+              .attr("stroke-width", ([fips]) => f === fips ? 3 : 1)
+              .attr("opacity", ([f]) => f === fips ? 1 : 0.3)
+
+        })
     }
 
   init()
